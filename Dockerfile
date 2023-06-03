@@ -18,4 +18,4 @@ EXPOSE 80
 EXPOSE 443
 
 COPY --from=downloader /pocketbase /usr/local/bin/pocketbase
-ENTRYPOINT ["/usr/local/bin/pocketbase", "serve", "--http=0.0.0.0:80", "--https=0.0.0.0:443","--dir=/pb_data", "--publicDir=/pb_public"]
+ENTRYPOINT ["/usr/local/bin/pocketbase", "serve", "--http=0.0.0.0:8090","--dir=/pb_data", "--publicDir=/pb_public"]
