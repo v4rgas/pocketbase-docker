@@ -1,29 +1,20 @@
-# syntax=docker/dockerfile:1
+FROM alpine:3 as downloader
 
-FROM amd64/ubuntu
-LABEL maintainer="Krushi Raj Tula <krushiraj123@gmail.com>"
+ARG TARGETOS
+ARG TARGETARCH
+ARG TARGETVARIANT
+ARG VERSION
 
-# Install the dependencies
-RUN apt-get update
-RUN apt-get install \
-    unzip \
-    wget -y
+ENV BUILDX_ARCH="${TARGETOS:-linux}_${TARGETARCH:-amd64}${TARGETVARIANT}"
 
-# Download Pocketbase and install it for AMD64
-RUN mkdir /pocketbase
-RUN wget -O- https://api.github.com/repos/pocketbase/pocketbase/releases/latest \
-  | grep "linux_amd64.zip" \
-  | cut -d : -f 2,3 \
-  | cut -d , -f 2 \
-  | tr -d '"' \
-  | wget -qi -
-RUN unzip pocketbase*.zip -d /pocketbase
-WORKDIR /pocketbase
-RUN chmod +x ./pocketbase
-RUN rm /pocketbase*.zip
+RUN wget https://github.com/pocketbase/pocketbase/releases/download/v${VERSION}/pocketbase_${VERSION}_${BUILDX_ARCH}.zip \
+    && unzip pocketbase_${VERSION}_${BUILDX_ARCH}.zip \
+    && chmod +x /pocketbase
 
-# Notify Docker that the container wants to expose a port.
+FROM alpine:3
+RUN apk update && apk add ca-certificates && rm -rf /var/cache/apk/*
+
 EXPOSE 8090
 
-# Start Pocketbase
-CMD [ "./pocketbase", "serve",  "--http", "0.0.0.0:8090" ]
+COPY --from=downloader /pocketbase /usr/local/bin/pocketbase
+ENTRYPOINT ["/usr/local/bin/pocketbase", "serve", "--http=0.0.0.0:8090", "--dir=/pb_data", "--publicDir=/pb_public"]
