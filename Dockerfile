@@ -15,6 +15,7 @@ FROM alpine:3
 RUN apk update && apk add ca-certificates && rm -rf /var/cache/apk/*
 
 EXPOSE 80
+EXPOSE 443
 
 COPY --from=downloader /pocketbase /usr/local/bin/pocketbase
 ENTRYPOINT ["/usr/local/bin/pocketbase", "serve", "--http=0.0.0.0:80", "--https=0.0.0.0:443","--dir=/pb_data", "--publicDir=/pb_public"]
